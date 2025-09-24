@@ -1,0 +1,72 @@
+#!/bin/bash
+#!/usr/bin/env bash
+
+echo "This Script will help you to fetch the PreMasterSecret Key from the PCAP"
+set -euo pipefail
+ 
+# extract_keylogs.sh
+# Prompts for INPUT1 (pcap file) and INPUT2 (output basename)
+# Runs:
+#   tshark -r INPUT1 -Y f5ethtrailer.tls.keylog -Tfields -e f5ethtrailer.tls.keylog | sed 's/,/\n,/g'
+# and appends the output to /var/tmp/INPUT2.pms
+ 
+usage() {
+  cat <<EOF
+Usage: $0
+This script will ask for:
+  - INPUT1 : path to the pcap/trace file to read with tshark
+  - INPUT2 : basename for the output file (will append to /var/tmp/INPUT2.pms)
+Example:
+  /path/to/pcap.pcap  => INPUT1
+  mykeys              => output appended to /var/tmp/mykeys.pms
+EOF
+}
+ 
+# Check tshark available
+if ! command -v tshark >/dev/null 2>&1; then
+  echo "ERROR: tshark not found in PATH. Install tshark (wireshark) and retry." >&2
+  exit 2
+fi
+ 
+# Prompt user for inputs
+read -r -p "Enter path to input capture file (INPUT1): " INPUT1
+read -r -p "Enter output basename (INPUT2) — results will be appended to /var/tmp/INPUT2.pms: " INPUT2
+ 
+# Basic validation
+if [[ -z "$INPUT1" || -z "$INPUT2" ]]; then
+  echo "ERROR: Both INPUT1 and INPUT2 must be provided." >&2
+  usage
+  exit 3
+fi
+ 
+if [[ ! -f "$INPUT1" ]]; then
+  echo "ERROR: Input file '$INPUT1' does not exist or is not a regular file." >&2
+  exit 4
+fi
+ 
+OUT_DIR="/var/tmp"
+OUT_FILE="${OUT_DIR}/${INPUT2}.pms"
+ 
+# Ensure /var/tmp exists and is writable
+if [[ ! -d "$OUT_DIR" ]]; then
+  echo "Note: $OUT_DIR does not exist; attempting to create it..."
+  mkdir -p "$OUT_DIR"
+fi
+ 
+if [[ ! -w "$OUT_DIR" ]]; then
+  echo "ERROR: $OUT_DIR is not writable by $(whoami). You may need sudo." >&2
+  exit 5
+fi
+ 
+echo "Appending extracted keylog fields from '$INPUT1' to '$OUT_FILE' ..."
+ 
+# Use tshark and transform commas into newline+comma.
+# We use bash $'...' quoting to ensure \n is interpreted in the sed replacement.
+# Append (>>) so previous contents are preserved.
+tshark -r "$INPUT1" -Y 'f5ethtrailer.tls.keylog' -Tfields -e f5ethtrailer.tls.keylog \
+  | sed $'s/,/\\\n,/g' >> "$OUT_FILE"
+ 
+echo "Done. Output appended to: $OUT_FILE"
+
+
+ 
