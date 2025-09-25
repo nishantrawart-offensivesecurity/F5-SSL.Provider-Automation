@@ -1,0 +1,17 @@
+#!/bin/bash
+ 
+read -p "Do you want to disable tcpdump.sslkeylogger? (y/n): " answer
+
+#Basic Validation to ask the user if they really want to disable the TLS keylogger.
+ 
+if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+     lsof
+     echo "Command executed: tcpdump.sslkeylogger disabled."  
+elif [[ "$answer" == "n" || "$answer" == "N" ]]; then 
+    echo "No action taken."
+    exit 0 
+else
+    echo "Invalid input. Please enter y or n."
+    exit 1
+fi
+ 
