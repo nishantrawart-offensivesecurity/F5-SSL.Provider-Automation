@@ -8,3 +8,6 @@ You need to run the provided script on the BIG-IP device to extract the PMS from
 - You'll need to copy the script provided in the Extract_PMS repository into the BIG-IP device under /var/tmp directory.
 - Change the user privilege of the script.
 - Also, if you need to disable the SSLPROVIDER automatically post PMS extraction completion, you can add the repository **Disabling SSL_Provider** along with the PMS decryption script.
+
+
+<img width="714" height="131" alt="PMS" src="https://github.com/user-attachments/assets/5cc42d9b-40b3-47f7-9deb-51d8b31587c4" />
